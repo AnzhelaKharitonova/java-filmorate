@@ -89,9 +89,9 @@ public class FilmService {
         if (releaseDate == null) {
             return false;
         }
-        if (releaseDate.isBefore(LocalDate.of(1985, 12, 28))) {
+        if (releaseDate.isBefore(LocalDate.of(1895, 12, 28))) {
             log.warn("Ошибка валидации даты релиза фильма");
-            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1985 года");
+            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
         return true;
     }

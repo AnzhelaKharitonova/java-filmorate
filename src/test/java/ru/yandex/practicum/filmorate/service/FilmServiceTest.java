@@ -62,7 +62,7 @@ class FilmServiceTest {
                 ValidationException.class,
                 () -> filmService.addFilm(film)
         );
-        assertEquals("Дата релиза не может быть раньше 28 декабря 1985 года", exception.getMessage());
+        assertEquals("Дата релиза не может быть раньше 28 декабря 1895 года", exception.getMessage());
     }
 
     @Test
