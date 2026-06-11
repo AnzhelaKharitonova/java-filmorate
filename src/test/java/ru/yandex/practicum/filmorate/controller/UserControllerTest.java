@@ -38,7 +38,7 @@ class UserControllerTest {
 
     @Test
     void updateUser_whenDataIsCorrect_returnsUpdatedUser() throws ValidationException {
-        User User = userController.addUser(new User(
+        User user = userController.addUser(new User(
                 null, "Email@mail.ru", "Login", null, null));
         User newUser = new User(1, "Email@mail.ru", "Login", "Василий", null);
         User expected = new User(1, "Email@mail.ru", "Login", "Василий",
