@@ -93,6 +93,10 @@ public class FilmService {
             log.warn("Ошибка валидации даты релиза фильма");
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
+        if (releaseDate.isAfter(LocalDate.now().plusYears(1))) {
+            log.warn("Ошибка валидации даты релиза фильма");
+            throw new ValidationException("Дата релиза фильма не может быть больше чем текущий либо следующий год");
+        }
         return true;
     }
 

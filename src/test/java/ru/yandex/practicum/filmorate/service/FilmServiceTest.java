@@ -66,6 +66,19 @@ class FilmServiceTest {
     }
 
     @Test
+    void addFilm_whenReleaseDate2036year_throwsException() {
+        Film film = new Film();
+        film.setName("Фильм");
+        film.setReleaseDate(LocalDate.of(2036, 6, 12));
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> filmService.addFilm(film)
+        );
+        assertEquals("Дата релиза фильма не может быть больше чем текущий либо следующий год",
+                exception.getMessage());
+    }
+
+    @Test
     void addFilm_whenDurationIsNegative_throwsException() {
         Film film = new Film();
         film.setName("Фильм");

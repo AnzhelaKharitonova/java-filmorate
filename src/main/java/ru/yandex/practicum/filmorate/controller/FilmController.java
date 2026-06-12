@@ -27,10 +27,10 @@ public class FilmController {
 
     @PostMapping
     public Film addFilm(@RequestBody Film film) throws ValidationException {
-//        if (film == null) {
-//            log.warn("Пустое тело запроса POST");
-//            throw new ValidationException("Тело запроса не может быть пустым");
-//        }
+        if (film == null) {
+            log.warn("Пустое тело запроса POST");
+            throw new ValidationException("Тело запроса не может быть пустым");
+        }
         return filmService.addFilm(film);
     }
 

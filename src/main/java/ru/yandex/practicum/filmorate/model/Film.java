@@ -17,7 +17,6 @@ public class Film {
     private Integer id;
     private String name;
     private String description;
-    @PastOrPresent
     private LocalDate releaseDate;
     private Integer duration;
 }
