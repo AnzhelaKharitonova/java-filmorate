@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +26,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User addUser(@Valid @RequestBody User user) throws ValidationException {
+    public User addUser(@RequestBody User user) throws ValidationException {
         if (user == null) {
             log.warn("Пустое тело запроса POST");
             throw new ValidationException("Тело запроса не может быть пустым");
@@ -36,7 +35,7 @@ public class UserController {
     }
 
     @PutMapping
-    public User updateUser(@Valid @RequestBody User user) throws ValidationException {
+    public User updateUser(@RequestBody User user) throws ValidationException {
         if (user == null) {
             log.warn("Пустое тело запроса PUT");
             throw new ValidationException("Тело запроса не может быть пустым");
