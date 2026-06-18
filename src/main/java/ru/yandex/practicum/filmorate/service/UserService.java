@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,7 @@ public class UserService {
     public User addUser(User user) throws ValidationException {
         validateLogin(user.getLogin(), true);
         validateEmail(user.getEmail(), true);
+        validateBirthday(user.getBirthday());
 
         user.setId(generateId());
         if (user.getName() == null) {
@@ -47,7 +49,7 @@ public class UserService {
         if (user.getName() != null) {
             updatableUser.setName(user.getName());
         }
-        if (user.getBirthday() != null) {
+        if (validateBirthday(user.getBirthday())) {
             updatableUser.setBirthday(user.getBirthday());
         }
         users.put(updatableUser.getId(), updatableUser);
@@ -78,9 +80,28 @@ public class UserService {
         if (email == null) {
             if (isNewUser) {
                 log.warn("Ошибка валидации email");
-                throw new ValidationException("Поле email не может быть пустым");
+                throw new ValidationException("Поле email должно быть заполнено");
             }
             return false;
+        }
+        if (email.isBlank()) {
+            log.warn("Ошибка валидации email");
+            throw new ValidationException("Поле email не может быть пустым");
+        }
+        if (!email.contains("@")) {
+            log.warn("Ошибка валидации email");
+            throw new ValidationException("Email должен содержать символ @");
+        }
+        return true;
+    }
+
+    private boolean validateBirthday(LocalDate birthday) throws ValidationException {
+        if (birthday == null) {
+            return false;
+        }
+        if (birthday.isAfter(LocalDate.now())) {
+            log.warn("Ошибка валидации дня рождения");
+            throw new ValidationException("День рождения не может быть в будущем");
         }
         return true;
     }

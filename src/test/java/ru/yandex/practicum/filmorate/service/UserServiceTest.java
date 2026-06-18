@@ -41,18 +41,6 @@ class UserServiceTest {
     }
 
     @Test
-    void addUser_whenEmailIsNull_throwsException() {
-        User user = new User();
-        user.setLogin("Login");
-        user.setEmail(null);
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userService.addUser(user)
-        );
-        assertEquals("Поле email не может быть пустым", exception.getMessage());
-    }
-
-    @Test
     void addUser_whenLoginContainsSpace_throwsException() {
         User user = new User();
         user.setLogin("Login login");
@@ -62,6 +50,55 @@ class UserServiceTest {
                 () -> userService.addUser(user)
         );
         assertEquals("Login не должен содержать пробелы", exception.getMessage());
+    }
+
+    @Test
+    void addUser_whenEmailIsNull_throwsException() {
+        User user = new User();
+        user.setLogin("Login");
+        user.setEmail(null);
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> userService.addUser(user)
+        );
+        assertEquals("Поле email должно быть заполнено", exception.getMessage());
+    }
+
+    @Test
+    void addUser_whenEmailIsBlanc_throwsException() {
+        User user = new User();
+        user.setLogin("Login");
+        user.setEmail("  ");
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> userService.addUser(user)
+        );
+        assertEquals("Поле email не может быть пустым", exception.getMessage());
+    }
+
+    @Test
+    void addUser_whenEmailDoesNotContainAtSymbol_throwsException() {
+        User user = new User();
+        user.setLogin("Login");
+        user.setEmail("email.mail.ru");
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> userService.addUser(user)
+        );
+        assertEquals("Email должен содержать символ @", exception.getMessage());
+    }
+
+    @Test
+    void addUser_whenBirthdayInFuture_throwsException() {
+        User user = new User();
+        user.setLogin("Login");
+        user.setEmail("email@mail.ru");
+        user.setBirthday(LocalDate.now().plusYears(1));
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> userService.addUser(user)
+        );
+        assertEquals("День рождения не может быть в будущем", exception.getMessage());
     }
 
     @Test
