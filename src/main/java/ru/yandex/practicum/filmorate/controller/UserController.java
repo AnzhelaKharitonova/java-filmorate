@@ -4,43 +4,43 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
 
 @RestController
-@RequestMapping("/films")
+@RequestMapping("/users")
 @Slf4j
-public class FilmController {
-    private final FilmService filmService;
+public class UserController {
+    private final UserService userService;
 
     @Autowired
-    public FilmController(FilmService filmService) {
-        this.filmService = filmService;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping
-    public Collection<Film> findAll() {
-        return filmService.findAll();
+    public Collection<User> findAll() {
+        return userService.findAll();
     }
 
     @PostMapping
-    public Film addFilm(@RequestBody Film film) throws ValidationException {
-        if (film == null) {
+    public User addUser(@RequestBody User user) throws ValidationException {
+        if (user == null) {
             log.warn("Пустое тело запроса POST");
             throw new ValidationException("Тело запроса не может быть пустым");
         }
-        return filmService.addFilm(film);
+        return userService.addUser(user);
     }
 
     @PutMapping
-    public Film updateFilm(@RequestBody Film film) throws ValidationException {
-        if (film == null) {
+    public User updateUser(@RequestBody User user) throws ValidationException {
+        if (user == null) {
             log.warn("Пустое тело запроса PUT");
             throw new ValidationException("Тело запроса не может быть пустым");
         }
-        return filmService.updateFilm(film);
+        return userService.updateUser(user);
     }
 
 }
