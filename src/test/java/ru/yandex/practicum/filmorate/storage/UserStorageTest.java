@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -170,8 +171,8 @@ class UserStorageTest {
                 .login("Login")
                 .email("email@mail.ru")
                 .build();
-        ValidationException exception = assertThrows(
-                ValidationException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> userStorage.updateUser(user2)
         );
         assertEquals("Пользователь c id = 2 не найден", exception.getMessage());
