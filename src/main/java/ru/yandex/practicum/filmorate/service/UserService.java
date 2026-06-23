@@ -2,122 +2,56 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
-@Service
 @Slf4j
+@Service
 @Getter
 public class UserService {
+    private UserStorage userStorage;
 
-    Map<Integer, User> users = new HashMap<>();
-
-    public Collection<User> findAll() {
-        return users.values();
+    @Autowired
+    public UserService(UserStorage userStorage) {
+        this.userStorage = userStorage;
     }
 
-    public User addUser(User user) throws ValidationException {
-        validateLogin(user.getLogin(), true);
-        validateEmail(user.getEmail(), true);
-        validateBirthday(user.getBirthday());
-
-        user.setId(generateId());
-        if (user.getName() == null) {
-            user.setName(user.getLogin());
-        }
-        users.put(user.getId(), user);
-        log.info("Добавлен пользователь с id = {}", user.getId());
-        return user;
+    public User addFriend(Long id, Long friendId) {
+        User user = userStorage.findUserById(id);
+        User friend = userStorage.findUserById(friendId);
+        user.getFriends().add(friendId);
+        friend.getFriends().add(id);
+        log.info("Пользователи с id = {} и id = {} добавлены друг другу в друзья", id, friendId);
+        return friend;
     }
 
-    public User updateUser(User user) throws ValidationException {
-        validateId(user.getId());
-
-        User updatableUser = users.get(user.getId());
-        if (validateLogin(user.getLogin(), false)) {
-            updatableUser.setLogin(user.getLogin());
-        }
-        if (validateEmail(user.getEmail(), false)) {
-            updatableUser.setEmail(user.getEmail());
-        }
-        if (user.getName() != null) {
-            updatableUser.setName(user.getName());
-        }
-        if (validateBirthday(user.getBirthday())) {
-            updatableUser.setBirthday(user.getBirthday());
-        }
-        users.put(updatableUser.getId(), updatableUser);
-        log.info("Обновлен пользователь с id = {}", user.getId());
-        return updatableUser;
+    public User deleteFriend(Long id, Long friendId) {
+        User user = userStorage.findUserById(id);
+        User friend = userStorage.findUserById(friendId);
+        user.getFriends().remove(friendId);
+        friend.getFriends().remove(id);
+        log.info("Пользователи с id = {} и id = {} удалены из друзей друг у друга", id, friendId);
+        return friend;
     }
 
-    private boolean validateLogin(String login, boolean isNewUser) throws ValidationException {
-        if (login == null) {
-            if (isNewUser) {
-                log.warn("Ошибка валидации логина");
-                throw new ValidationException("Поле login должно быть заполнено");
-            }
-            return false;
-        }
-        if (login.isBlank()) {
-            log.warn("Ошибка валидации логина");
-            throw new ValidationException("Поле login не может быть пустым");
-        }
-        if (login.contains(" ")) {
-            log.warn("Ошибка валидации логина");
-            throw new ValidationException("Login не должен содержать пробелы");
-        }
-        return true;
+    public List<User> findAllFriends(Long id) {
+        User user = userStorage.findUserById(id);
+        return user.getFriends().stream()
+                .map(friendId -> userStorage.findUserById(friendId))
+                .toList();
     }
 
-    private boolean validateEmail(String email, boolean isNewUser) throws ValidationException {
-        if (email == null) {
-            if (isNewUser) {
-                log.warn("Ошибка валидации email");
-                throw new ValidationException("Поле email должно быть заполнено");
-            }
-            return false;
-        }
-        if (email.isBlank()) {
-            log.warn("Ошибка валидации email");
-            throw new ValidationException("Поле email не может быть пустым");
-        }
-        if (!email.contains("@")) {
-            log.warn("Ошибка валидации email");
-            throw new ValidationException("Email должен содержать символ @");
-        }
-        return true;
-    }
-
-    private boolean validateBirthday(LocalDate birthday) throws ValidationException {
-        if (birthday == null) {
-            return false;
-        }
-        if (birthday.isAfter(LocalDate.now())) {
-            log.warn("Ошибка валидации дня рождения");
-            throw new ValidationException("День рождения не может быть в будущем");
-        }
-        return true;
-    }
-
-    private void validateId(Integer id) throws ValidationException {
-        if (id == null) {
-            throw new ValidationException(("Поле id не может быть пустым"));
-        }
-        if (!users.containsKey(id)) {
-            throw new ValidationException("Пользователь c id = " + id + " не найден");
-        }
-    }
-
-    private Integer generateId() {
-        int maxId = users.keySet().stream().mapToInt(id -> id).max().orElse(0);
-        return ++maxId;
+    public List<User> findCommonFriends(Long id, Long otherId) {
+        User user = userStorage.findUserById(id);
+        User otherUser = userStorage.findUserById(otherId);
+        return user.getFriends().stream()
+                .filter(friendId -> otherUser.getFriends().contains(friendId))
+                .map(friendId -> userStorage.findUserById(friendId))
+                .toList();
     }
 
 }

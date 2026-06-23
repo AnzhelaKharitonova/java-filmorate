@@ -2,176 +2,80 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class UserServiceTest {
-
     UserService userService;
+    User user1;
+    User user2;
+    User user3;
 
     @BeforeEach
     void create() {
-        userService = new UserService();
+        UserStorage us = new InMemoryUserStorage();
+        userService = new UserService(us);
+        user1 = User.builder()
+                .name("Саша")
+                .login("Sasha")
+                .email("Sasha@mail.ru")
+                .build();
+        user2 = User.builder()
+                .name("Маша")
+                .login("Masha")
+                .email("Masha@mail.ru")
+                .build();
+        user3 = User.builder()
+                .name("Даша")
+                .login("Dasha")
+                .email("Dasha@mail.ru")
+                .build();
+
+        userService.getUserStorage().addUser(user1);
+        userService.getUserStorage().addUser(user2);
+        userService.getUserStorage().addUser(user3);
     }
 
     @Test
-    void addUser_whenLoginIsNull_throwsException() {
-        User user = new User();
-        user.setLogin(null);
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userService.addUser(user)
-        );
-        assertEquals("Поле login должно быть заполнено", exception.getMessage());
+    void addFriend_whenDataIsCorrect_addsFriend() {
+        userService.addFriend(1L, 2L);
+        userService.addFriend(1L, 3L);
+        assertEquals(Set.of(2L, 3L), userService.getUserStorage().findUserById(1L).getFriends());
+        assertEquals(Set.of(1L), userService.getUserStorage().findUserById(2L).getFriends());
+        assertEquals(Set.of(1L), userService.getUserStorage().findUserById(3L).getFriends());
     }
 
     @Test
-    void addUser_whenLoginIsBlanc_throwsException() {
-        User user = new User();
-        user.setLogin(" ");
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userService.addUser(user)
-        );
-        assertEquals("Поле login не может быть пустым", exception.getMessage());
+    void deleteFriend_whenDataIsCorrect_deletesFriend() {
+        userService.addFriend(1L, 2L);
+        userService.addFriend(1L, 3L);
+        userService.deleteFriend(1L, 3L);
+        assertEquals(Set.of(2L), userService.getUserStorage().findUserById(1L).getFriends());
+        assertEquals(Set.of(), userService.getUserStorage().findUserById(3L).getFriends());
     }
 
     @Test
-    void addUser_whenLoginContainsSpace_throwsException() {
-        User user = new User();
-        user.setLogin("Login login");
-        user.setEmail("Email@mail.ru");
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userService.addUser(user)
-        );
-        assertEquals("Login не должен содержать пробелы", exception.getMessage());
+    void findAllFriends_returnsFriends() {
+        userService.addFriend(1L, 2L);
+        userService.addFriend(1L, 3L);
+        List<User> expected = List.of(user2, user3);
+        assertEquals(expected, userService.findAllFriends(1L));
     }
 
     @Test
-    void addUser_whenEmailIsNull_throwsException() {
-        User user = new User();
-        user.setLogin("Login");
-        user.setEmail(null);
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userService.addUser(user)
-        );
-        assertEquals("Поле email должно быть заполнено", exception.getMessage());
-    }
+    void findCommonFriends_returnsCommonFriends() {
+        userService.addFriend(1L, 2L);
+        userService.addFriend(1L, 2L);
+        userService.addFriend(3L, 2L);
 
-    @Test
-    void addUser_whenEmailIsBlanc_throwsException() {
-        User user = new User();
-        user.setLogin("Login");
-        user.setEmail("  ");
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userService.addUser(user)
-        );
-        assertEquals("Поле email не может быть пустым", exception.getMessage());
-    }
-
-    @Test
-    void addUser_whenEmailDoesNotContainAtSymbol_throwsException() {
-        User user = new User();
-        user.setLogin("Login");
-        user.setEmail("email.mail.ru");
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userService.addUser(user)
-        );
-        assertEquals("Email должен содержать символ @", exception.getMessage());
-    }
-
-    @Test
-    void addUser_whenBirthdayInFuture_throwsException() {
-        User user = new User();
-        user.setLogin("Login");
-        user.setEmail("email@mail.ru");
-        user.setBirthday(LocalDate.now().plusYears(1));
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userService.addUser(user)
-        );
-        assertEquals("День рождения не может быть в будущем", exception.getMessage());
-    }
-
-    @Test
-    void addUser_whenDataIsCorrect_addsUser() throws ValidationException {
-        User user = new User();
-        user.setLogin("Login");
-        user.setEmail("Email@mail.ru");
-        user.setBirthday(LocalDate.of(1988, 4, 9));
-        user.setName("Name");
-
-        userService.addUser(user);
-
-        user.setId(1);
-
-        assertEquals(user, userService.getUsers().get(1));
-    }
-
-    @Test
-    void addUser_whenNameIsNull_usesLogin() throws ValidationException {
-        User user = new User();
-        user.setLogin("Login");
-        user.setEmail("Email@mail.ru");
-        user.setBirthday(LocalDate.of(1988, 4, 9));
-
-        userService.addUser(user);
-
-        User expected = new User(1, "Email@mail.ru", "Login", "Login",
-                LocalDate.of(1988, 4, 9));
-
-        assertEquals(expected, userService.getUsers().get(1));
-    }
-
-    @Test
-    void updateUser_whenIdIsNull_throwsException() {
-        User user = new User();
-        user.setLogin("Login");
-        user.setEmail("Email@mail.ru");
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userService.updateUser(user)
-        );
-        assertEquals("Поле id не может быть пустым", exception.getMessage());
-    }
-
-    @Test
-    void updateUser_whenUserByIdNotFound_throwsException() throws ValidationException {
-        User user = new User();
-        user.setLogin("Login");
-        user.setEmail("Email@mail.ru");
-        userService.addUser(user);
-        User user2 = new User(2, "Email@mail.ru", "Login", null, null);
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userService.updateUser(user2)
-        );
-        assertEquals("Пользователь c id = 2 не найден", exception.getMessage());
-    }
-
-    @Test
-    void updateUser_whenDataIsCorrect_updatesUser() throws ValidationException {
-        User user = new User(null, "Email@mail.ru", "Login", "Name",
-                LocalDate.of(1988, 4, 9));
-
-        userService.addUser(user);
-
-        User newUser = new User(1, "Email@mail.ru", "UserLogin", null, null);
-
-        userService.updateUser(newUser);
-
-        User expected = new User(1, "Email@mail.ru", "UserLogin", "Name",
-                LocalDate.of(1988, 4, 9));
-
-        assertEquals(expected, userService.getUsers().get(1));
+        List<User> expected = List.of(user2);
+        assertEquals(expected, userService.findCommonFriends(1L, 3L));
     }
 
 }

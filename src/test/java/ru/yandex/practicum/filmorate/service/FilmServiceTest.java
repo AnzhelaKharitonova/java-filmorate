@@ -2,161 +2,93 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class FilmServiceTest {
     FilmService filmService;
+    User user1;
+    User user2;
+    User user3;
+    Film film1;
+    Film film2;
+    Film film3;
 
     @BeforeEach
     void create() {
-        filmService = new FilmService();
+        UserStorage us = new InMemoryUserStorage();
+        FilmStorage fs = new InMemoryFilmStorage();
+        filmService = new FilmService(us, fs);
+        user1 = User.builder()
+                .name("Саша")
+                .login("Sasha")
+                .email("Sasha@mail.ru")
+                .build();
+        user2 = User.builder()
+                .name("Маша")
+                .login("Masha")
+                .email("Masha@mail.ru")
+                .build();
+        user3 = User.builder()
+                .name("Даша")
+                .login("Dasha")
+                .email("Dasha@mail.ru")
+                .build();
+
+        film1 = Film.builder()
+                .name("Терминатор")
+                .build();
+        film2 = Film.builder()
+                .name("Левша")
+                .build();
+        film3 = Film.builder()
+                .name("Титаник")
+                .build();
+        filmService.getFilmStorage().addFilm(film1);
+        filmService.getFilmStorage().addFilm(film2);
+        filmService.getFilmStorage().addFilm(film3);
+
+        filmService.getUserStorage().addUser(user1);
+        filmService.getUserStorage().addUser(user2);
+        filmService.getUserStorage().addUser(user3);
     }
 
     @Test
-    void addFilm_whenNameIsNull_throwsException() {
-        Film film = new Film();
-        film.setName(null);
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> filmService.addFilm(film)
-        );
-        assertEquals("Поле название фильма должно быть заполнено", exception.getMessage());
+    void addLike_whenDataIsCorrect_addsLike() {
+        filmService.addLike(1L, 1L);
+        Set<Long> expected = Set.of(1L);
+        assertEquals(expected, filmService.getFilmStorage().findFilmById(1L).getLikes());
     }
 
     @Test
-    void addFilm_whenNameIsBlanc_throwsException() {
-        Film film = new Film();
-        film.setName(" ");
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> filmService.addFilm(film)
-        );
-        assertEquals("Название фильма не может быть пустым", exception.getMessage());
+    void deleteLike_whenDataIsCorrect_deletesLike() {
+        filmService.addLike(1L, 1L);
+        filmService.addLike(1L, 2L);
+        filmService.deleteLike(1L, 2L);
+        Set<Long> expected = Set.of(1L);
+        assertEquals(expected, filmService.getFilmStorage().findFilmById(1L).getLikes());
     }
 
     @Test
-    void addFilm_whenDescriptionIsVeryLong_throwsException() {
-        Film film = new Film();
-        film.setName("Фильм");
-        film.setDescription("Из романа М. А. Булгакова «Мастер и Маргарита» взята фраза, содержащая ровно 205 \n" +
-                "символов с пробелами, которая затрагивает тему внезапной смертности человека. Эта цитата описывает \n" +
-                "непредсказуемость жизни и невозможность планировать будущее.");
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> filmService.addFilm(film)
-        );
-        assertEquals("Максимальная длина описания — 200 символов", exception.getMessage());
-    }
+    void findPopularFilms() {
+        filmService.addLike(1L, 1L);
+        filmService.addLike(1L, 2L);
+        filmService.addLike(1L, 3L);
+        filmService.addLike(2L, 1L);
+        filmService.addLike(2L, 2L);
+        filmService.addLike(3L, 1L);
 
-    @Test
-    void addFilm_whenReleaseDate1865year_throwsException() {
-        Film film = new Film();
-        film.setName("Фильм");
-        film.setReleaseDate(LocalDate.of(1865, 12, 28));
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> filmService.addFilm(film)
-        );
-        assertEquals("Дата релиза не может быть раньше 28 декабря 1895 года", exception.getMessage());
-    }
-
-    @Test
-    void addFilm_whenReleaseDate2036year_throwsException() {
-        Film film = new Film();
-        film.setName("Фильм");
-        film.setReleaseDate(LocalDate.of(2036, 6, 12));
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> filmService.addFilm(film)
-        );
-        assertEquals("Дата релиза фильма не может быть больше чем текущий либо следующий год",
-                exception.getMessage());
-    }
-
-    @Test
-    void addFilm_whenDurationIsNegative_throwsException() {
-        Film film = new Film();
-        film.setName("Фильм");
-        film.setDuration(-200);
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> filmService.addFilm(film)
-        );
-        assertEquals("Продолжительность фильма должна быть положительным числом", exception.getMessage());
-    }
-
-    @Test
-    void addFilm_whenDurationIsZero_throwsException() {
-        Film film = new Film();
-        film.setName("Фильм");
-        film.setDuration(0);
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> filmService.addFilm(film)
-        );
-        assertEquals("Продолжительность фильма должна быть положительным числом", exception.getMessage());
-    }
-
-    @Test
-    void addFilm_whenDataIsCorrect_addsFilm() throws ValidationException {
-        Film film = new Film();
-        film.setName("Фильм");
-        film.setDescription("Очень интересный фильм");
-        film.setReleaseDate(LocalDate.of(2025, 10, 15));
-        film.setDuration(90);
-
-        filmService.addFilm(film);
-
-        film.setId(1);
-
-        assertEquals(film, filmService.getFilms().get(1));
-    }
-
-    @Test
-    void updateFilm_whenIdIsNull_throwsException() {
-        Film film = new Film();
-        film.setName("Фильм");
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> filmService.updateFilm(film)
-        );
-        assertEquals("Поле id не может быть пустым", exception.getMessage());
-    }
-
-    @Test
-    void updateFilm_whenFilmByIdNotFound_throwsException() throws ValidationException {
-        Film film = new Film();
-        film.setName("Фильм");
-        filmService.addFilm(film);
-        Film film2 = new Film(2, "Фильм", null, null, null);
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> filmService.updateFilm(film2)
-        );
-        assertEquals("Фильм c id = 2 не найден", exception.getMessage());
-    }
-
-    @Test
-    void updateFilm_whenDataIsCorrect_updatesFilm() throws ValidationException {
-        Film film = new Film(null, "Фильм", "Очень интересный фильм",
-                LocalDate.of(2025, 10, 15), 90);
-
-        filmService.addFilm(film);
-
-        Film newFilm = new Film(1, "Кино", "Очень интересное кино", null, null);
-
-        filmService.updateFilm(newFilm);
-
-        Film expected = new Film(1, "Кино", "Очень интересное кино",
-                LocalDate.of(2025, 10, 15), 90);
-
-        assertEquals(expected, filmService.getFilms().get(1));
+        List<Film> expected = List.of(film1, film2, film3);
+        assertEquals(expected, filmService.findPopularFilms(5L));
     }
 
 }
-
