@@ -68,8 +68,7 @@ public class InMemoryUserStorage implements UserStorage {
         return updatableUser;
     }
 
-    @Override
-    public boolean validateLogin(String login, boolean isNewUser) {
+    private boolean validateLogin(String login, boolean isNewUser) {
         if (login == null) {
             if (isNewUser) {
                 log.warn("Ошибка валидации логина");
@@ -88,8 +87,7 @@ public class InMemoryUserStorage implements UserStorage {
         return true;
     }
 
-    @Override
-    public boolean validateEmail(String email, boolean isNewUser) {
+    private boolean validateEmail(String email, boolean isNewUser) {
         if (email == null) {
             if (isNewUser) {
                 log.warn("Ошибка валидации email");
@@ -108,8 +106,7 @@ public class InMemoryUserStorage implements UserStorage {
         return true;
     }
 
-    @Override
-    public boolean validateBirthday(LocalDate birthday) {
+    private boolean validateBirthday(LocalDate birthday) {
         if (birthday == null) {
             return false;
         }
@@ -120,8 +117,7 @@ public class InMemoryUserStorage implements UserStorage {
         return true;
     }
 
-    @Override
-    public void validateId(Long id) {
+    private void validateId(Long id) {
         if (id == null) {
             throw new ValidationException(("Поле id не может быть пустым"));
         }
@@ -130,8 +126,7 @@ public class InMemoryUserStorage implements UserStorage {
         }
     }
 
-    @Override
-    public Long generateId() {
+    private Long generateId() {
         long maxId = users.keySet().stream().mapToLong(id -> id).max().orElse(0);
         return ++maxId;
     }

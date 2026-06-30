@@ -70,8 +70,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return updatableFilm;
     }
 
-    @Override
-    public boolean validateName(String name, boolean isNewFilm) {
+    private boolean validateName(String name, boolean isNewFilm) {
         if (name == null) {
             if (isNewFilm) {
                 log.warn("Ошибка валидации названия фильма");
@@ -86,8 +85,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return true;
     }
 
-    @Override
-    public boolean validateDescription(String description) {
+    private boolean validateDescription(String description) {
         if (description == null) {
             return false;
         }
@@ -98,8 +96,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return true;
     }
 
-    @Override
-    public boolean validateReleaseDate(LocalDate releaseDate) {
+    private boolean validateReleaseDate(LocalDate releaseDate) {
         if (releaseDate == null) {
             return false;
         }
@@ -114,8 +111,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return true;
     }
 
-    @Override
-    public boolean validateDuration(Integer duration) {
+    private boolean validateDuration(Integer duration) {
         if (duration == null) {
             return false;
         }
@@ -126,8 +122,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return true;
     }
 
-    @Override
-    public void validateId(Long id) {
+    private void validateId(Long id) {
         if (id == null) {
             log.warn("Ошибка валидации id");
             throw new ValidationException(("Поле id не может быть пустым"));
@@ -138,8 +133,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
     }
 
-    @Override
-    public Long generateId() {
+    private Long generateId() {
         long maxId = films.keySet().stream().mapToLong(id -> id).max().orElse(0);
         return ++maxId;
     }
