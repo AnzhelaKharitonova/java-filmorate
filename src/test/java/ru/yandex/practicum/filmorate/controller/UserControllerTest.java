@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import java.time.LocalDate;
 
@@ -16,7 +17,7 @@ class UserControllerTest {
 
     @BeforeEach
     void create() {
-        userController = new UserController(new UserService());
+        userController = new UserController(new UserService(new InMemoryUserStorage()));
     }
 
     @Test
@@ -31,23 +32,48 @@ class UserControllerTest {
 
     @Test
     void addUser_whenDataIsCorrect_returnsUser() throws ValidationException {
-        User actual = userController.addUser(new User(
-                null, "Email@mail.ru", "Login", "Name",
-                LocalDate.of(2026, 5, 12)));
-        User expected = new User(1, "Email@mail.ru", "Login", "Name",
-                LocalDate.of(2026, 5, 12));
+        User user = User.builder()
+                .email("Email@mail.ru")
+                .login("Login")
+                .name("Name")
+                .birthday(LocalDate.of(2026, 5, 12))
+                .build();
 
-        assertEquals(expected, actual);
+        User expected = User.builder()
+                .id(1L)
+                .email("Email@mail.ru")
+                .login("Login")
+                .name("Name")
+                .birthday(LocalDate.of(2026, 5, 12))
+                .build();
+
+        assertEquals(expected, userController.addUser(user));
     }
 
     @Test
     void updateUser_whenDataIsCorrect_returnsUpdatedUser() throws ValidationException {
-        User user = userController.addUser(new User(
-                null, "Email@mail.ru", "Login", null, null));
-        User newUser = new User(1, "Email@mail.ru", "Login", "Василий",
-                LocalDate.of(1988, 4, 9));
-        User expected = new User(1, "Email@mail.ru", "Login", "Василий",
-                LocalDate.of(1988, 4, 9));
+        User user = User.builder()
+                .email("Email@mail.ru")
+                .login("Login")
+                .build();
+
+        userController.addUser(user);
+        User newUser = User.builder()
+                .id(1L)
+                .email("Email@mail.ru")
+                .login("Login")
+                .name("Василий")
+                .birthday(LocalDate.of(1988, 4, 9))
+                .build();
+
+        User expected = User.builder()
+                .id(1L)
+                .email("Email@mail.ru")
+                .login("Login")
+                .name("Василий")
+                .birthday(LocalDate.of(1988, 4, 9))
+                .build();
+
         User actual = userController.updateUser(newUser);
 
         assertEquals(expected, actual);
