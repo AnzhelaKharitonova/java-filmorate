@@ -5,9 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.GenreRowMapper;
 
 import java.util.Collection;
