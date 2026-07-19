@@ -23,13 +23,13 @@ public class UserDbStorage implements UserStorage {
     private final UserRowMapper mapper;
 
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE id = ?";
-    private static final String INSERT_QUERY = "INSERT INTO users(email, login, name, birthday)" +
-            "VALUES (?, ?, ?, ?) returning id";
+    private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE user_id = ?";
+    private static final String INSERT_QUERY = "INSERT INTO users(email, login, user_name, birthday) " +
+            "VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY =
-            "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
+            "UPDATE users SET email = ?, login = ?, user_name = ?, birthday = ? WHERE user_id = ?";
     private static final String ADD_FRIEND_QUERY =
-            "INSERT INTO user_friends(user_id, friend_user_id) VALUES(?, ?) returning id";
+            "INSERT INTO user_friends(user_id, friend_user_id) VALUES(?, ?)";
     private static final String DELETE_FRIEND_QUERY =
             "DELETE FROM user_friends WHERE user_id = ? AND friend_user_id = ?";
     private static final String FIND_ALL_FRIENDS_QUERY =
@@ -42,9 +42,9 @@ public class UserDbStorage implements UserStorage {
                     "FROM user_friends AS uf1 " +
                     "JOIN users AS u ON uf1.friend_user_id = u.user_id " +
                     "WHERE uf1.user_id = ? AND uf1.friend_user_id IN (" +
-                                           "SELECT uf2.friend_user_id " +
-                                           "FROM user_friends AS uf2 " +
-                                           "WHERE uf2.user_id = ?)";
+                    "SELECT uf2.friend_user_id " +
+                    "FROM user_friends AS uf2 " +
+                    "WHERE uf2.user_id = ?)";
 
 
     @Autowired
@@ -81,7 +81,7 @@ public class UserDbStorage implements UserStorage {
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKeyAs(Long.class);
+        Long id = keyHolder.getKey().longValue();
 
         if (id == null) {
             log.warn("Ошибка в работе с БД");
@@ -112,13 +112,13 @@ public class UserDbStorage implements UserStorage {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             PreparedStatement ps = connection
-                    .prepareStatement(INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
+                    .prepareStatement(ADD_FRIEND_QUERY, Statement.RETURN_GENERATED_KEYS);
             ps.setLong(1, userId);
             ps.setLong(2, friendId);
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKeyAs(Long.class);
+        Long id = keyHolder.getKey().longValue();
 
         if (id == null) {
             log.warn("Ошибка в работе с БД");
@@ -139,7 +139,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> findAllFriends(Long id) {
-        return jdbc.query(FIND_ALL_QUERY, mapper, id);
+        return jdbc.query(FIND_ALL_FRIENDS_QUERY, mapper, id);
     }
 
     @Override

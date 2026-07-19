@@ -18,7 +18,7 @@ public class GenreStorage {
     private final GenreRowMapper mapper;
 
     private static final String FIND_ALL_QUERY = "SELECT * FROM genres";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE id = ?";
+    private static final String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE genre_id = ?";
 
     @Autowired
     public GenreStorage(JdbcTemplate jdbc, GenreRowMapper mapper) {

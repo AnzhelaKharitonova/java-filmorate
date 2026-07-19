@@ -33,20 +33,22 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private static final String FIND_ALL_QUERY = "SELECT * FROM films";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
-    private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration, rating)" +
-            "VALUES (?, ?, ?, ?, ?) returning id";
-    private static final String ADD_FILM_GENRES_QUERY = "INSERT INTO film_genres(film_id, genres_id)" +
-            "VALUES (?, ?) returning id";
-    private static final String FIND_FILM_GENRES_QUERY = "SELECT g.id, g.name FROM genres AS g " +
-            "JOIN film_genres AS fg ON g.id = fg.genre_id " +
-            "WHERE fg.movie_id = ?";
+    private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE film_id = ?";
+    private static final String INSERT_QUERY = "INSERT INTO films(title, description, release_date, duration, rating)" +
+            "VALUES (?, ?, ?, ?, ?)";
+    private static final String ADD_FILM_GENRES_QUERY = "INSERT INTO film_genres(film_id, genre_id)" +
+            "VALUES (?, ?)";
+    private static final String FIND_FILM_GENRES_QUERY = "SELECT g.genre_id, g.genre_name FROM genres AS g " +
+            "JOIN film_genres AS fg ON g.genre_id = fg.genre_id  " +
+            "WHERE fg.film_id = ?";
     private static final String UPDATE_QUERY =
-            "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, rating = ? WHERE id = ?";
+            "UPDATE films SET title = ?, description = ?, release_date = ?, duration = ?, rating = ? WHERE film_id = ?";
     private static final String ADD_LIKE_QUERY =
-            "INSERT INTO likes(film_id, user_id) VALUES(?, ?) returning id";
+            "INSERT INTO likes(film_id, user_id) VALUES(?, ?)";
     private static final String DELETE_LIKE_QUERY =
             "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
+    private static final String FIND_LIKES_QUERY =
+            "SELECT user_id FROM likes WHERE film_id = ?";
     private static final String FIND_POPULAR_FILMS_QUERY =
             "SELECT f.* " +
                     "FROM films AS f " +
@@ -67,6 +69,7 @@ public class FilmDbStorage implements FilmStorage {
             Film result = jdbc.queryForObject(FIND_BY_ID_QUERY, filmMapper, id);
             List<Genre> filmGenres = jdbc.query(FIND_FILM_GENRES_QUERY, new GenreRowMapper(), id);
             result.setGenres(filmGenres);
+            result.setLikes(findLikes(id));
             return Optional.ofNullable(result);
         } catch (EmptyResultDataAccessException ignored) {
             return Optional.empty();
@@ -83,11 +86,11 @@ public class FilmDbStorage implements FilmStorage {
             ps.setString(2, film.getDescription());
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
             ps.setInt(4, film.getDuration());
-            ps.setString(5, film.getRating().toString());
+            ps.setString(5, film.getRating().getName());
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKeyAs(Long.class);
+        Long id = keyHolder.getKey().longValue();
 
         if (id == null) {
             log.warn("Ошибка в работе с БД");
@@ -107,7 +110,7 @@ public class FilmDbStorage implements FilmStorage {
                 newFilm.getDescription(),
                 newFilm.getReleaseDate(),
                 newFilm.getDuration(),
-                newFilm.getRating(),
+                newFilm.getRating().getName(),
                 newFilm.getId());
         if (rowsUpdated == 0) {
             log.warn("Ошибка в работе с БД");
@@ -128,7 +131,7 @@ public class FilmDbStorage implements FilmStorage {
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKeyAs(Long.class);
+        Long id = keyHolder.getKey().longValue();
 
         if (id == null) {
             log.warn("Ошибка в работе с БД");
@@ -165,13 +168,19 @@ public class FilmDbStorage implements FilmStorage {
                 return ps;
             }, keyHolder);
 
-            Long id = keyHolder.getKeyAs(Long.class);
+            Long id = keyHolder.getKey().longValue();
 
             if (id == null) {
                 log.warn("Ошибка в работе с БД");
                 throw new InternalServerException("Не удалось сохранить данные");
             }
         }
+    }
+
+    private Set<Long> findLikes(Long filmId) {
+        List<Long> likes = jdbc.queryForList(FIND_LIKES_QUERY, Long.class, filmId);
+        return new HashSet<>(likes);
+
     }
 
 }
