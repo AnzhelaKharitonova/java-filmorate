@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -123,7 +124,7 @@ class FilmStorageTest {
 
         film.setId(1L);
 
-        assertEquals(film, filmStorage.findFilmById(1L));
+        assertEquals(Optional.of(film), filmStorage.findFilmById(1L));
     }
 
     @Test
@@ -182,7 +183,7 @@ class FilmStorageTest {
                 .duration(90)
                 .build();
 
-        assertEquals(expected, filmStorage.findFilmById(1L));
+        assertEquals(Optional.of(expected), filmStorage.findFilmById(1L));
     }
 
 }

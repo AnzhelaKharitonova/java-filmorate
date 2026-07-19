@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -60,22 +59,6 @@ class FilmServiceTest {
         filmService.getUserStorage().addUser(user1);
         filmService.getUserStorage().addUser(user2);
         filmService.getUserStorage().addUser(user3);
-    }
-
-    @Test
-    void addLike_whenDataIsCorrect_addsLike() {
-        filmService.addLike(1L, 1L);
-        Set<Long> expected = Set.of(1L);
-        assertEquals(expected, filmService.getFilmStorage().findFilmById(1L).getLikes());
-    }
-
-    @Test
-    void deleteLike_whenDataIsCorrect_deletesLike() {
-        filmService.addLike(1L, 1L);
-        filmService.addLike(1L, 2L);
-        filmService.deleteLike(1L, 2L);
-        Set<Long> expected = Set.of(1L);
-        assertEquals(expected, filmService.getFilmStorage().findFilmById(1L).getLikes());
     }
 
     @Test

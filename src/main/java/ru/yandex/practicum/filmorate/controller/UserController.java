@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -30,7 +31,12 @@ public class UserController {
 
     @GetMapping
     public Collection<User> findAll() {
-        return userService.getUserStorage().findAll();
+        return userService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public User findUserById(@PathVariable Long id) {
+        return userService.findUserById(id);
     }
 
     @PostMapping
@@ -39,7 +45,7 @@ public class UserController {
             log.warn("Пустое тело запроса POST");
             throw new ValidationException("Тело запроса не может быть пустым");
         }
-        return userService.getUserStorage().addUser(user);
+        return userService.addUser(user);
     }
 
     @PutMapping
@@ -48,16 +54,16 @@ public class UserController {
             log.warn("Пустое тело запроса PUT");
             throw new ValidationException("Тело запроса не может быть пустым");
         }
-        return userService.getUserStorage().updateUser(user);
+        return userService.updateUser(user);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public User addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+    public Long addFriend(@PathVariable Long id, @PathVariable Long friendId) {
         return userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public User deleteFriend(@PathVariable Long id, @PathVariable Long friendId) {
+    public Long deleteFriend(@PathVariable Long id, @PathVariable Long friendId) {
        return userService.deleteFriend(id, friendId);
     }
 

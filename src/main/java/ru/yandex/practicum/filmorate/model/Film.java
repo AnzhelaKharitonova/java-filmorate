@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -23,6 +24,8 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
+    List<Genre> genres;
+    Rating rating;
 
     @Builder.Default
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)

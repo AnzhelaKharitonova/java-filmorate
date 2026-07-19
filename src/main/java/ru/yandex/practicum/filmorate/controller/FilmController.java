@@ -31,7 +31,12 @@ public class FilmController {
 
     @GetMapping
     public Collection<Film> findAll() {
-        return filmService.getFilmStorage().findAll();
+        return filmService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Film findFilmById(@PathVariable Long id) {
+        return filmService.findFilmById(id);
     }
 
     @PostMapping
@@ -40,7 +45,7 @@ public class FilmController {
             log.warn("Пустое тело запроса POST");
             throw new ValidationException("Тело запроса не может быть пустым");
         }
-        return filmService.getFilmStorage().addFilm(film);
+        return filmService.addFilm(film);
     }
 
     @PutMapping
@@ -49,7 +54,7 @@ public class FilmController {
             log.warn("Пустое тело запроса PUT");
             throw new ValidationException("Тело запроса не может быть пустым");
         }
-        return filmService.getFilmStorage().updateFilm(film);
+        return filmService.updateFilm(film);
     }
 
     @PutMapping("/{id}/like/{userId}")

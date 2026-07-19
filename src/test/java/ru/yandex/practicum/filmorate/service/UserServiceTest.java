@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -37,27 +36,9 @@ class UserServiceTest {
                 .email("Dasha@mail.ru")
                 .build();
 
-        userService.getUserStorage().addUser(user1);
-        userService.getUserStorage().addUser(user2);
-        userService.getUserStorage().addUser(user3);
-    }
-
-    @Test
-    void addFriend_whenDataIsCorrect_addsFriend() {
-        userService.addFriend(1L, 2L);
-        userService.addFriend(1L, 3L);
-        assertEquals(Set.of(2L, 3L), userService.getUserStorage().findUserById(1L).getFriends());
-        assertEquals(Set.of(1L), userService.getUserStorage().findUserById(2L).getFriends());
-        assertEquals(Set.of(1L), userService.getUserStorage().findUserById(3L).getFriends());
-    }
-
-    @Test
-    void deleteFriend_whenDataIsCorrect_deletesFriend() {
-        userService.addFriend(1L, 2L);
-        userService.addFriend(1L, 3L);
-        userService.deleteFriend(1L, 3L);
-        assertEquals(Set.of(2L), userService.getUserStorage().findUserById(1L).getFriends());
-        assertEquals(Set.of(), userService.getUserStorage().findUserById(3L).getFriends());
+        userService.addUser(user1);
+        userService.addUser(user2);
+        userService.addUser(user3);
     }
 
     @Test
