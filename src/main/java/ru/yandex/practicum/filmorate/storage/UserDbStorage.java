@@ -85,12 +85,13 @@ public class UserDbStorage implements UserStorage {
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKey().longValue();
+        Number key = keyHolder.getKey();
 
-        if (id == null) {
+        if (key == null) {
             log.warn("Ошибка в работе с БД");
             throw new InternalServerException("Не удалось сохранить данные");
         }
+        Long id = key.longValue();
 
         user.setId(id);
         return user;
@@ -122,9 +123,9 @@ public class UserDbStorage implements UserStorage {
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKey().longValue();
+        Number key = keyHolder.getKey();
 
-        if (id == null) {
+        if (key == null) {
             log.warn("Ошибка в работе с БД");
             throw new InternalServerException("Не удалось сохранить данные");
         }
@@ -133,7 +134,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Long deleteFriend(Long id, Long friendId) {
-        int rowsDeleted = jdbc.update(DELETE_FRIEND_QUERY, id, friendId);
+        jdbc.update(DELETE_FRIEND_QUERY, id, friendId);
 
         return friendId;
     }

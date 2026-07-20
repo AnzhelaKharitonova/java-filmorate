@@ -34,8 +34,8 @@ public class UserService {
             user.setName(user.getLogin());
         }
         validateBirthday(user.getBirthday());
-        userStorage.addUser(user);
-        log.info("Добавлен новый пользователь с id = {}", user.getId()); //todo проверить id
+        User savedUser = userStorage.addUser(user);
+        log.info("Добавлен новый пользователь с id = {}", savedUser.getId());
         return user;
     }
 
@@ -60,7 +60,7 @@ public class UserService {
             updatedUser.setBirthday(user.getBirthday());
         }
         userStorage.updateUser(updatedUser);
-        log.info("Обновлены данные пользователя с id = {}", user.getId());
+        log.info("Обновлены данные пользователя с id = {}", updatedUser.getId());
         return updatedUser;
     }
 

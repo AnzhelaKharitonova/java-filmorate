@@ -111,12 +111,13 @@ public class FilmDbStorage implements FilmStorage {
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKey().longValue();
+        Number key = keyHolder.getKey();
 
-        if (id == null) {
+        if (key == null) {
             log.warn("Ошибка в работе с БД");
             throw new InternalServerException("Не удалось сохранить данные");
         }
+        Long id = key.longValue();
 
         film.setId(id);
         saveGenres(film);
@@ -156,12 +157,13 @@ public class FilmDbStorage implements FilmStorage {
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKey().longValue();
+        Number key = keyHolder.getKey();
 
-        if (id == null) {
+        if (key == null) {
             log.warn("Ошибка в работе с БД");
             throw new InternalServerException("Не удалось сохранить данные");
         }
+
         return userId;
     }
 
