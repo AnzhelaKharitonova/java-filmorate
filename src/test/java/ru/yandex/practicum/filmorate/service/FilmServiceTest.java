@@ -2,14 +2,15 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.*;
+import ru.yandex.practicum.filmorate.storage.mappers.GenreRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.MpaRowMapper;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -26,7 +27,9 @@ class FilmServiceTest {
     void create() {
         UserStorage us = new InMemoryUserStorage();
         FilmStorage fs = new InMemoryFilmStorage();
-        filmService = new FilmService(us, fs);
+        GenreDbStorage gs = new GenreDbStorage(new JdbcTemplate(), new GenreRowMapper());
+        MpaDbStorage ms = new MpaDbStorage(new JdbcTemplate(), new MpaRowMapper());
+        filmService = new FilmService(us, fs, gs, ms);
         user1 = User.builder()
                 .name("Саша")
                 .login("Sasha")
@@ -62,6 +65,22 @@ class FilmServiceTest {
     }
 
     @Test
+    void addLike_whenDataIsCorrect_addsLike() {
+        filmService.addLike(1L, 1L);
+        Set<Long> expected = Set.of(1L);
+        assertEquals(expected, filmService.findFilmById(1L).getLikes());
+    }
+
+    @Test
+    void deleteLike_whenDataIsCorrect_deletesLike() {
+        filmService.addLike(1L, 1L);
+        filmService.addLike(1L, 2L);
+        filmService.deleteLike(1L, 2L);
+        Set<Long> expected = Set.of(1L);
+        assertEquals(expected, filmService.getFilmStorage().findFilmById(1L).get().getLikes());
+    }
+
+    @Test
     void findPopularFilms() {
         filmService.addLike(1L, 1L);
         filmService.addLike(1L, 2L);
@@ -71,7 +90,7 @@ class FilmServiceTest {
         filmService.addLike(3L, 1L);
 
         List<Film> expected = List.of(film1, film2, film3);
-        assertEquals(expected, filmService.findPopularFilms(5L));
+        assertEquals(expected, filmService.findPopularFilms(5));
     }
 
 }

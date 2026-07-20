@@ -26,8 +26,12 @@ public class UserDbStorage implements UserStorage {
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE user_id = ?";
     private static final String INSERT_QUERY = "INSERT INTO users(email, login, user_name, birthday) " +
             "VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_QUERY =
-            "UPDATE users SET email = ?, login = ?, user_name = ?, birthday = ? WHERE user_id = ?";
+    private static final String UPDATE_QUERY = "UPDATE users " +
+            "SET email = ?, " +
+            "login = ?, " +
+            "user_name = ?, " +
+            "birthday = ? " +
+            "WHERE user_id = ?";
     private static final String ADD_FRIEND_QUERY =
             "INSERT INTO user_friends(user_id, friend_user_id) VALUES(?, ?)";
     private static final String DELETE_FRIEND_QUERY =
@@ -130,10 +134,7 @@ public class UserDbStorage implements UserStorage {
     @Override
     public Long deleteFriend(Long id, Long friendId) {
         int rowsDeleted = jdbc.update(DELETE_FRIEND_QUERY, id, friendId);
-        if (rowsDeleted == 0) {
-            log.warn("Ошибка в работе с БД");
-            throw new InternalServerException("Не удалось удалить данные");
-        }
+
         return friendId;
     }
 

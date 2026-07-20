@@ -7,3 +7,12 @@ VALUES
   ('Триллер'),
   ('Документальный'),
   ('Боевик');
+
+MERGE INTO mpa (mpa_name)
+KEY (mpa_name)
+VALUES
+  ('G'),
+  ('PG'),
+  ('PG-13'),
+  ('R'),
+  ('NC-17');

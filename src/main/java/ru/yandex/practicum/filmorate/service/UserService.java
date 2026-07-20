@@ -16,7 +16,7 @@ import java.util.List;
 @Slf4j
 @Service
 public class UserService {
-    private UserStorage userStorage;
+    private final UserStorage userStorage;
 
     @Autowired
     public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {

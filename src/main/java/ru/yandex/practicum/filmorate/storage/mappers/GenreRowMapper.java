@@ -12,7 +12,10 @@ public class GenreRowMapper implements RowMapper<Genre> {
 
     @Override
     public Genre mapRow(ResultSet rs, int rowNum) throws SQLException {
-        String genreName = rs.getString("genre_name");
-        return Genre.fromName(genreName);
+        Genre genre = new Genre();
+        genre.setId(rs.getInt("genre_id"));
+        genre.setName(rs.getString("genre_name"));
+
+        return genre;
     }
 }

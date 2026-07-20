@@ -6,15 +6,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Rating;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.MpaDbStorage;
 import ru.yandex.practicum.filmorate.storage.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.GenreRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.MpaRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
 
 import java.time.LocalDate;
@@ -27,12 +30,17 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JdbcTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({UserDbStorage.class, FilmDbStorage.class, GenreStorage.class, FilmRowMapper.class, UserRowMapper.class, GenreRowMapper.class})
+@AutoConfigureTestDatabase
+@Import({UserDbStorage.class, FilmDbStorage.class,
+        GenreDbStorage.class, MpaDbStorage.class,
+        FilmRowMapper.class, UserRowMapper.class,
+        GenreRowMapper.class, MpaRowMapper.class})
 class FilmorateApplicationTests {
     private final UserDbStorage userStorage;
     private final FilmDbStorage filmStorage;
-    private final GenreStorage genreStorage;
+    private final GenreDbStorage genreStorage;
+    private final MpaDbStorage mpaStorage;
+    private final JdbcTemplate jdbc;
 
     User user1;
     User user2;
@@ -42,10 +50,14 @@ class FilmorateApplicationTests {
     Film film3;
 
     @Autowired
-    public FilmorateApplicationTests(UserDbStorage userStorage, FilmDbStorage filmStorage, GenreStorage genreStorage) {
+    public FilmorateApplicationTests(UserDbStorage userStorage, FilmDbStorage filmStorage,
+                                     GenreDbStorage genreDbStorage, MpaDbStorage mpaStorage,
+                                     JdbcTemplate jdbc) {
         this.userStorage = userStorage;
         this.filmStorage = filmStorage;
-        this.genreStorage = genreStorage;
+        this.genreStorage = genreDbStorage;
+        this.mpaStorage = mpaStorage;
+        this.jdbc = jdbc;
     }
 
     @BeforeEach
@@ -74,21 +86,24 @@ class FilmorateApplicationTests {
                 .description("Описание")
                 .duration(90)
                 .releaseDate(LocalDate.of(1988, 12, 12))
-                .rating(Rating.R)
+                .mpa(new Mpa(3, "PG-13"))
+                .genres(Set.of(new Genre(6, "Боевик")))
                 .build();
         film2 = Film.builder()
                 .name("Левша")
                 .description("Описание")
                 .duration(90)
                 .releaseDate(LocalDate.of(1988, 12, 12))
-                .rating(Rating.R)
+                .mpa(new Mpa(3, "PG-13"))
+                .genres(Set.of(new Genre(6, "Боевик")))
                 .build();
         film3 = Film.builder()
                 .name("Титаник")
                 .description("Описание")
                 .duration(90)
                 .releaseDate(LocalDate.of(1988, 12, 12))
-                .rating(Rating.R)
+                .mpa(new Mpa(3, "PG-13"))
+                .genres(Set.of(new Genre(2, "Драма")))
                 .build();
     }
 
@@ -223,7 +238,11 @@ class FilmorateApplicationTests {
         Film film = filmStorage.addFilm(film1);
         filmStorage.addLike(film.getId(), user.getId());
 
-        assertEquals(Set.of(user.getId()), filmStorage.findFilmById(film.getId()).get().getLikes());
+        Integer count = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM likes WHERE film_id = ? AND user_id = ?",
+                Integer.class, film.getId(), user.getId());
+
+        assertEquals(1, count);
     }
 
     @Test
@@ -232,8 +251,11 @@ class FilmorateApplicationTests {
         Film film = filmStorage.addFilm(film1);
         filmStorage.addLike(film.getId(), user.getId());
         filmStorage.deleteLike(film.getId(), user.getId());
+        Integer count = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM likes WHERE film_id = ? AND user_id = ?",
+                Integer.class, film.getId(), user.getId());
 
-        assertEquals(Set.of(), filmStorage.findFilmById(film.getId()).get().getLikes());
+        assertEquals(0, count);
     }
 
     @Test
@@ -246,25 +268,42 @@ class FilmorateApplicationTests {
         filmStorage.addLike(film.getId(), otherUser.getId());
         filmStorage.addLike(otherFilm.getId(), otherUser.getId());
 
-        assertEquals(List.of(film, otherFilm), filmStorage.findPopularFilms(10L));
+        assertEquals(List.of(film, otherFilm), filmStorage.findPopularFilms(10));
     }
 
     @Test
     public void testFindAllGenres() {
         Collection<Genre> expected = List.of(
-                Genre.COMEDY,
-                Genre.DRAMA,
-                Genre.CARTOON,
-                Genre.THRILLER,
-                Genre.DOCUMENTARY,
-                Genre.ACTION_MOVIE);
-        assertEquals(expected, genreStorage.findAll());
+                new Genre(1, "Комедия"),
+                new Genre(2, "Драма"),
+                new Genre(3, "Мультфильм"),
+                new Genre(4, "Триллер"),
+                new Genre(5, "Документальный"),
+                new Genre(6, "Боевик"));
+        assertEquals(expected, genreStorage.findAllGenres());
     }
 
     @Test
     public void testFindGenreById() {
 
-        assertEquals(Optional.of(Genre.COMEDY), genreStorage.findGenreById(1L));
+        assertEquals(Optional.of(new Genre(1, "Комедия")), genreStorage.findGenreById(1));
+    }
+
+    @Test
+    public void testFindAllMpa() {
+        List<Mpa> expected = List.of(
+                new Mpa(1, "G"),
+                new Mpa(2, "PG"),
+                new Mpa(3, "PG-13"),
+                new Mpa(4, "R"),
+                new Mpa(5, "NC-17"));
+        assertEquals(expected, mpaStorage.findAllMpa());
+    }
+
+    @Test
+    public void testFindMpaById() {
+
+        assertEquals(Optional.of(new Mpa(1, "G")), mpaStorage.findMpaById(1));
     }
 
 }

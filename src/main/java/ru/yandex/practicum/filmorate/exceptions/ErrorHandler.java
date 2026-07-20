@@ -38,7 +38,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleMissingPathVariableException(Exception e) {
         return new ErrorResponse("Ошибка сервера",
-                "Внутрення ошибка сервера. Пожалуйста попробуйте позже");
+                "Внутренняя ошибка сервера. Пожалуйста попробуйте позже");
     }
 
 }

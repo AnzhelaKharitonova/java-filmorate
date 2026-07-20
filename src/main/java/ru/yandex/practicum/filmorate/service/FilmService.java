@@ -8,29 +8,38 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.MpaDbStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
 @Getter
 public class FilmService {
-    private UserStorage userStorage;
-    private FilmStorage filmStorage;
+    private final UserStorage userStorage;
+    private final FilmStorage filmStorage;
+    private final GenreDbStorage genreStorage;
+    private final MpaDbStorage mpaStorage;
 
     @Autowired
     public FilmService(@Qualifier("userDbStorage") UserStorage userStorage,
-                       @Qualifier("filmDbStorage") FilmStorage filmStorage) {
+                       @Qualifier("filmDbStorage") FilmStorage filmStorage,
+                       GenreDbStorage genreStorage, MpaDbStorage mpaStorage) {
         this.userStorage = userStorage;
         this.filmStorage = filmStorage;
+        this.genreStorage = genreStorage;
+        this.mpaStorage = mpaStorage;
     }
 
-    public Collection<Film> findAll() {
+    public List<Film> findAll() {
         return filmStorage.findAll();
     }
 
@@ -39,9 +48,12 @@ public class FilmService {
         validateDescription(film.getDescription());
         validateReleaseDate(film.getReleaseDate());
         validateDuration(film.getDuration());
-        filmStorage.addFilm(film);
-        log.info("Добавлен новый фильм с id = {}", film.getId()); //todo проверить id
-        return film;
+        validateMpa(film.getMpa());
+        validateGenres(film.getGenres());
+
+        Film savedFilm = filmStorage.addFilm(film);
+        log.info("Добавлен новый фильм с id = {}", savedFilm.getId());
+        return savedFilm;
     }
 
     public Film findFilmById(Long id) {
@@ -64,15 +76,15 @@ public class FilmService {
         if (validateDuration(film.getDuration())) {
             updatedFilm.setDuration(film.getDuration());
         }
-        if (film.getRating() != null) {
-            updatedFilm.setRating(film.getRating());
+        if (validateMpa(film.getMpa())) {
+            updatedFilm.setMpa(film.getMpa());
         }
-        if (film.getGenres() != null) {
+        if (validateGenres(film.getGenres())) {
             updatedFilm.setGenres(film.getGenres());
         }
 
         filmStorage.updateFilm(updatedFilm);
-        log.info("Обновлены данные о фильме с id = {}", film.getId());
+        log.info("Обновлены данные о фильме с id = {}", updatedFilm.getId());
         return updatedFilm;
     }
 
@@ -92,13 +104,29 @@ public class FilmService {
         return userId;
     }
 
-    public List<Film> findPopularFilms(Long count) {
+    public List<Film> findPopularFilms(int count) {
         return filmStorage.findPopularFilms(count);
     }
 
     private User findUserById(Long id) {
         return userStorage.findUserById(id).orElseThrow(() ->
                 new NotFoundException("Пользователь с id = " + id + " не найден"));
+    }
+
+    private boolean validateMpa(Mpa mpa) {
+        if (mpa == null) return false;
+        mpaStorage.findMpaById(mpa.getId()).orElseThrow(() ->
+                new NotFoundException("Рейтинг с id = " + mpa.getId() + " не найден"));
+        return true;
+    }
+
+    private boolean validateGenres(Set<Genre> genres) {
+        if (genres == null || genres.isEmpty()) return false;
+        for (Genre genre : genres) {
+            genreStorage.findGenreById(genre.getId()).orElseThrow(() ->
+                    new NotFoundException("Жанр с id = " + genre.getId() + " не найден"));
+        }
+        return true;
     }
 
     private boolean validateName(String name, boolean isNewFilm) {

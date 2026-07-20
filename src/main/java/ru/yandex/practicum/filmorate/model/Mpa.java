@@ -9,15 +9,15 @@ import java.util.Objects;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Genre {
+public class Mpa {
     private Integer id;
     private String name;
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        Genre genre = (Genre) o;
-        return Objects.equals(id, genre.id);
+        Mpa mpa = (Mpa) o;
+        return Objects.equals(id, mpa.id);
     }
 
     @Override
