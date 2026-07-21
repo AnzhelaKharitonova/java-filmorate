@@ -15,7 +15,6 @@ import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.util.Collection;
 import java.util.List;
 
 @RestController
@@ -30,8 +29,13 @@ public class FilmController {
     }
 
     @GetMapping
-    public Collection<Film> findAll() {
-        return filmService.getFilmStorage().findAll();
+    public List<Film> findAll() {
+        return filmService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Film findFilmById(@PathVariable Long id) {
+        return filmService.findFilmById(id);
     }
 
     @PostMapping
@@ -40,7 +44,7 @@ public class FilmController {
             log.warn("Пустое тело запроса POST");
             throw new ValidationException("Тело запроса не может быть пустым");
         }
-        return filmService.getFilmStorage().addFilm(film);
+        return filmService.addFilm(film);
     }
 
     @PutMapping
@@ -49,7 +53,7 @@ public class FilmController {
             log.warn("Пустое тело запроса PUT");
             throw new ValidationException("Тело запроса не может быть пустым");
         }
-        return filmService.getFilmStorage().updateFilm(film);
+        return filmService.updateFilm(film);
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -63,8 +67,8 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<Film> findPopularFilms(@RequestParam(defaultValue = "10") Long count) {
-       return filmService.findPopularFilms(count);
+    public List<Film> findPopularFilms(@RequestParam(defaultValue = "10") int count) {
+        return filmService.findPopularFilms(count);
     }
 
 }

@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -122,7 +123,7 @@ class UserStorageTest {
 
         user.setId(1L);
 
-        assertEquals(user, userStorage.findUserById(1L));
+        assertEquals(Optional.of(user), userStorage.findUserById(1L));
     }
 
     @Test
@@ -143,7 +144,7 @@ class UserStorageTest {
                 .name("Login")
                 .build();
 
-        assertEquals(expected, userStorage.findUserById(1L));
+        assertEquals(Optional.of(expected), userStorage.findUserById(1L));
     }
 
     @Test
@@ -205,7 +206,7 @@ class UserStorageTest {
                 .birthday(LocalDate.of(1988, 4, 9))
                 .build();
 
-        assertEquals(expected, userStorage.findUserById(1L));
+        assertEquals(Optional.of(expected), userStorage.findUserById(1L));
     }
 
 }

@@ -7,9 +7,7 @@ import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @Slf4j
@@ -23,12 +21,12 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User findUserById(Long id) {
+    public Optional<User> findUserById(Long id) {
         User user = users.get(id);
         if (user == null) {
             throw new NotFoundException("Пользователь с id = " + id + " не найден");
         }
-        return user;
+        return Optional.ofNullable(user);
     }
 
     @Override
@@ -66,6 +64,44 @@ public class InMemoryUserStorage implements UserStorage {
         users.put(updatableUser.getId(), updatableUser);
         log.info("Обновлен пользователь с id = {}", user.getId());
         return updatableUser;
+    }
+
+    @Override
+    public Long addFriend(Long userId, Long friendId) {
+        User user = users.get(userId);
+        User friend = users.get(friendId);
+        user.getFriends().add(friendId);
+        friend.getFriends().add(userId);
+        log.info("Пользователи с id = {} и id = {} добавлены друг другу в друзья", userId, friendId);
+        return friendId;
+    }
+
+    @Override
+    public Long deleteFriend(Long id, Long friendId) {
+        User user = users.get(id);
+        User friend = users.get(friendId);
+        user.getFriends().remove(friendId);
+        friend.getFriends().remove(id);
+        log.info("Пользователи с id = {} и id = {} удалены из друзей друг у друга", id, friendId);
+        return friendId;
+    }
+
+    @Override
+    public List<User> findAllFriends(Long id) {
+        User user = users.get(id);
+        return user.getFriends().stream()
+                .map(friendId -> users.get(friendId))
+                .toList();
+    }
+
+    @Override
+    public List<User> findCommonFriends(Long id, Long otherId) {
+        User user = users.get(id);
+        User otherUser = users.get(otherId);
+        return user.getFriends().stream()
+                .filter(friendId -> otherUser.getFriends().contains(friendId))
+                .map(friendId -> users.get(friendId))
+                .toList();
     }
 
     private boolean validateLogin(String login, boolean isNewUser) {
